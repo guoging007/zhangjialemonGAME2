@@ -1,0 +1,237 @@
+# 寫入實際的完整 HTML 程式碼（符合最新邏輯：客人居中 + 白糖無限）
+html_code = '''<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>張家檸檬傳說</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: "Microsoft YaHei", sans-serif;
+      background: url('背景1.png') center/cover no-repeat;
+      overflow: hidden;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(8px);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .game-area {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      color: #fff;
+      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+      font-weight: bold;
+    }
+    #lemon {
+      width: 120px;
+      cursor: pointer;
+    }
+    .slideable {
+      width: 80px;
+      position: absolute;
+      touch-action: none;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+    #drinkImage {
+      top: 50%;
+      right: 40px;
+      transform: translateY(-50%);
+    }
+    #sugarImage {
+      top: 50%;
+      left: 40px;
+      transform: translateY(-50%);
+    }
+    #drinkCount, #sugarCount {
+      position: absolute;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    }
+    #drinkCount {
+      top: calc(50% + 60px);
+      right: 45px;
+    }
+    #sugarCount {
+      top: calc(50% + 60px);
+      left: 45px;
+    }
+    #customerArea {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+    }
+    .customer {
+      display: flex;
+      align-items: center;
+      transition: transform 1.5s ease, opacity 1.5s ease;
+    }
+    .customer img {
+      width: 30vw;
+      max-height: 90vh;
+    }
+    .request {
+      margin-left: 16px;
+      background: #fff3cd;
+      border: 2px solid #e0b800;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 22px;
+      font-weight: bold;
+      white-space: nowrap;
+      color: #000;
+    }
+    .angry {
+      background-color: #f44336 !important;
+      color: white !important;
+      text-shadow: none;
+    }
+    .slide-out {
+      transform: translateY(100px);
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-area">
+    <h1>🍋 張家檸檬傳說</h1>
+    <p>點檸檬10下 → 產出飲料</p>
+    <img id="lemon" src="檸檬圖片1.png" alt="檸檬" />
+    <p>點擊次數：<span id="clickCount">0</span></p>
+  </div>
+  <img id="drinkImage" class="slideable" src="檸檬飲料圖片1.png" alt="飲料" />
+  <div id="drinkCount">x 0</div>
+  <img id="sugarImage" class="slideable" src="白糖1.png" alt="白糖" />
+  <div id="sugarCount">∞</div>
+  <div id="customerArea"></div>
+  <script>
+    let clickCount = 0, drinkStock = 0;
+    let customerExists = false, startTime = Date.now(), isFirstCustomer = true;
+    let customerCount = 0;
+
+    const lemon = document.getElementById("lemon");
+    const drinkImage = document.getElementById("drinkImage");
+    const sugarImage = document.getElementById("sugarImage");
+    const clickCountSpan = document.getElementById("clickCount");
+    const drinkCountSpan = document.getElementById("drinkCount");
+    const sugarCountSpan = document.getElementById("sugarCount");
+    const customerArea = document.getElementById("customerArea");
+
+    lemon.onclick = () => {
+      clickCount++;
+      clickCountSpan.textContent = clickCount;
+      if (clickCount >= 10) {
+        clickCount = 0;
+        drinkStock++;
+        updateUI();
+      }
+    };
+
+    function updateUI() {
+      drinkCountSpan.textContent = "x " + drinkStock;
+      sugarCountSpan.textContent = "∞";
+    }
+
+    function setupSlide(element, type) {
+      let startY = 0;
+      element.addEventListener("touchstart", e => startY = e.touches[0].clientY);
+      element.addEventListener("touchend", e => {
+        const endY = e.changedTouches[0].clientY;
+        if (endY - startY > 50) tryServe(type, element);
+      });
+    }
+
+    setupSlide(drinkImage, "drink");
+    setupSlide(sugarImage, "sugar");
+
+    function tryServe(type, element) {
+      const customer = document.querySelector(".customer");
+      if (!customer || !customerExists) return;
+      let needDrink = +customer.dataset.needDrink || 0;
+      let needSugar = +customer.dataset.needSugar || 0;
+      let servedDrink = +customer.dataset.servedDrink || 0;
+      let servedSugar = +customer.dataset.servedSugar || 0;
+      if (type === "drink" && servedDrink < needDrink && drinkStock > 0) {
+        servedDrink++; drinkStock--;
+      }
+      if (type === "sugar" && servedSugar < needSugar) {
+        servedSugar++;
+      }
+      customer.dataset.servedDrink = servedDrink;
+      customer.dataset.servedSugar = servedSugar;
+      element.classList.add("slide-out");
+      updateUI();
+      setTimeout(() => element.classList.remove("slide-out"), 500);
+      if (servedDrink >= needDrink && servedSugar >= needSugar) {
+        customer.querySelector(".request").textContent = "感謝光臨！";
+        customer.classList.add("slide-out");
+        setTimeout(() => removeCustomer(customer), 1500);
+      }
+    }
+
+    function spawnCustomer() {
+      if (customerExists) return;
+      customerExists = true; customerCount++;
+      const customer = document.createElement("div");
+      customer.className = "customer";
+      const elapsed = (Date.now() - startTime) / 1000;
+      const isAfter2Min = elapsed >= 120;
+      const isCustomer3 = customerCount % (Math.floor(Math.random() * 6) + 15) === 0;
+      const useCustomer2 = !isCustomer3 && isAfter2Min && Math.random() < 0.5;
+      const imageName = isCustomer3 ? "客人3.png" : useCustomer2 ? "客人2.png" : "客人1.png";
+      const needDrink = isCustomer3 ? Math.floor(Math.random() * 2) + 1 : Math.floor(Math.random() * 5) + 1;
+      const needSugar = isCustomer3 ? 30 : Math.floor(Math.random() * 4);
+      const waitTime = isFirstCustomer ? 30000 : isCustomer3 ? 10000 + Math.random()*2000 :
+                        useCustomer2 ? 9000 + Math.random()*3000 : 12000 + Math.random()*5000;
+      customer.dataset.needDrink = needDrink;
+      customer.dataset.needSugar = needSugar;
+      customer.dataset.servedDrink = 0;
+      customer.dataset.servedSugar = 0;
+      customer.dataset.type = isCustomer3 ? "3" : useCustomer2 ? "2" : "1";
+      customer.innerHTML = `
+        <img src="${imageName}">
+        <div class="request">我要 ${needDrink} 杯🍋 ${needSugar > 0 ? " + " + needSugar + " 糖" : ""}</div>
+      `;
+      customerArea.appendChild(customer);
+      customer.timeout = setTimeout(() => {
+        let servedD = +customer.dataset.servedDrink;
+        let servedS = +customer.dataset.servedSugar;
+        if (servedD < needDrink || servedS < needSugar) {
+          customer.querySelector(".request").textContent = "生氣離開了！";
+          customer.querySelector(".request").classList.add("angry");
+          if (customer.dataset.type === "2") {
+            drinkStock = Math.floor(drinkStock * 0.25);
+          }
+          customer.classList.add("slide-out");
+          setTimeout(() => removeCustomer(customer), 1500);
+        }
+      }, waitTime);
+      isFirstCustomer = false;
+    }
+
+    function removeCustomer(customer) {
+      clearTimeout(customer.timeout);
+      customer.remove();
+      customerExists = false;
+      updateUI();
+      setTimeout(spawnCustomer, 3000 + Math.random() * 4000);
+    }
+
+    spawnCustomer();
+  </script>
+</body>
+</html>
