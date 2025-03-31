@@ -1,15 +1,14 @@
-# 更新後 HTML 版本：改為拖動送出、移除動畫效果
-html_code_drag = '''
+# 產生支援手機觸控拖曳送出版本的 HTML 程式碼
+html_touch_drag_code = """
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>張家檸檬傳說 - 拖動送出版</title>
+  <title>張家檸檬傳說 - 手機拖曳版</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       height: 100%;
       font-family: "Microsoft YaHei", sans-serif;
       background: url('背景1.png') center/cover no-repeat;
@@ -41,6 +40,7 @@ html_code_drag = '''
       width: 80px;
       position: absolute;
       touch-action: none;
+      z-index: 5;
     }
     #drinkImage {
       top: 50%;
@@ -57,6 +57,7 @@ html_code_drag = '''
       font-size: 20px;
       font-weight: bold;
       color: white;
+      z-index: 5;
       text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
     }
     #drinkCount {
@@ -107,11 +108,12 @@ html_code_drag = '''
     <img id="lemon" src="檸檬圖片1.png" alt="檸檬" />
     <p>點擊次數：<span id="clickCount">0</span></p>
   </div>
-  <img id="drinkImage" class="draggable" src="檸檬飲料圖片1.png" alt="飲料" draggable="true" />
+  <img id="drinkImage" class="draggable" src="檸檬飲料圖片1.png" alt="飲料" />
   <div id="drinkCount">x 0</div>
-  <img id="sugarImage" class="draggable" src="白糖1.png" alt="白糖" draggable="true" />
+  <img id="sugarImage" class="draggable" src="白糖1.png" alt="白糖" />
   <div id="sugarCount">∞</div>
   <div id="customerArea"></div>
+
   <script>
     let clickCount = 0, drinkStock = 0;
     let customerExists = false, startTime = Date.now(), isFirstCustomer = true;
@@ -140,13 +142,36 @@ html_code_drag = '''
       sugarCountSpan.textContent = "∞";
     }
 
-    drinkImage.addEventListener("dragstart", e => {
-      e.dataTransfer.setData("text/plain", "drink");
-    });
+    function makeDraggable(item, type) {
+      let offsetX = 0, offsetY = 0;
+      item.addEventListener("touchstart", e => {
+        const touch = e.touches[0];
+        offsetX = touch.clientX - item.offsetLeft;
+        offsetY = touch.clientY - item.offsetTop;
+      });
+      item.addEventListener("touchmove", e => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        item.style.left = `${touch.clientX - offsetX}px`;
+        item.style.top = `${touch.clientY - offsetY}px`;
+      });
+      item.addEventListener("touchend", () => {
+        const customer = document.querySelector(".customer img");
+        if (!customer) return;
+        const rect1 = item.getBoundingClientRect();
+        const rect2 = customer.getBoundingClientRect();
+        if (rect1.right > rect2.left && rect1.left < rect2.right &&
+            rect1.bottom > rect2.top && rect1.top < rect2.bottom) {
+          tryServe(type);
+        }
+        item.style.top = type === "drink" ? "50%" : "50%";
+        item.style.left = type === "drink" ? "" : "40px";
+        item.style.right = type === "drink" ? "40px" : "";
+      });
+    }
 
-    sugarImage.addEventListener("dragstart", e => {
-      e.dataTransfer.setData("text/plain", "sugar");
-    });
+    makeDraggable(drinkImage, "drink");
+    makeDraggable(sugarImage, "sugar");
 
     function tryServe(type) {
       const customer = document.querySelector(".customer");
@@ -196,13 +221,6 @@ html_code_drag = '''
       customer.innerHTML = `<img src="${imageName}"><div class="request">我要 ${needDrink} 杯🍋 ${needSugar > 0 ? "+ " + needSugar + " 糖" : ""}</div>`;
       customerArea.appendChild(customer);
 
-      customer.addEventListener("dragover", e => e.preventDefault());
-      customer.addEventListener("drop", e => {
-        e.preventDefault();
-        const type = e.dataTransfer.getData("text/plain");
-        tryServe(type);
-      });
-
       customer.timeout = setTimeout(() => {
         if (+customer.dataset.servedDrink < +customer.dataset.needDrink ||
             +customer.dataset.servedSugar < +customer.dataset.needSugar) {
@@ -229,11 +247,11 @@ html_code_drag = '''
   </script>
 </body>
 </html>
-'''
+"""
 
-# 輸出檔案
-drag_path = "/mnt/data/index_drag_drop_no_animation.html"
-with open(drag_path, "w", encoding="utf-8") as f:
-    f.write(html_code_drag)
+# 輸出 HTML 檔案
+file_path = "/mnt/data/index_touch_drag_mobile.html"
+with open(file_path, "w", encoding="utf-8") as f:
+    f.write(html_touch_drag_code)
 
-drag_path
+file_path
