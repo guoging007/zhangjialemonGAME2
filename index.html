@@ -1,14 +1,15 @@
-# 重新建立 HTML 檔案（修正滑動後不觸發送出的 BUG - 方案 A）
-html_code = '''
+# 更新後 HTML 版本：改為拖動送出、移除動畫效果
+html_code_drag = '''
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>張家檸檬傳說 - 修正BUG</title>
+  <title>張家檸檬傳說 - 拖動送出版</title>
   <style>
     html, body {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       height: 100%;
       font-family: "Microsoft YaHei", sans-serif;
       background: url('背景1.png') center/cover no-repeat;
@@ -36,11 +37,10 @@ html_code = '''
       width: 120px;
       cursor: pointer;
     }
-    .slideable {
+    .draggable {
       width: 80px;
       position: absolute;
       touch-action: none;
-      transition: transform 0.5s ease, opacity 0.5s ease;
     }
     #drinkImage {
       top: 50%;
@@ -77,7 +77,6 @@ html_code = '''
     .customer {
       display: flex;
       align-items: center;
-      transition: transform 1.5s ease, opacity 1.5s ease;
     }
     .customer img {
       width: 30vw;
@@ -99,10 +98,6 @@ html_code = '''
       color: white !important;
       text-shadow: none;
     }
-    .slide-out {
-      transform: translateY(100px);
-      opacity: 0;
-    }
   </style>
 </head>
 <body>
@@ -112,9 +107,9 @@ html_code = '''
     <img id="lemon" src="檸檬圖片1.png" alt="檸檬" />
     <p>點擊次數：<span id="clickCount">0</span></p>
   </div>
-  <img id="drinkImage" class="slideable" src="檸檬飲料圖片1.png" alt="飲料" />
+  <img id="drinkImage" class="draggable" src="檸檬飲料圖片1.png" alt="飲料" draggable="true" />
   <div id="drinkCount">x 0</div>
-  <img id="sugarImage" class="slideable" src="白糖1.png" alt="白糖" />
+  <img id="sugarImage" class="draggable" src="白糖1.png" alt="白糖" draggable="true" />
   <div id="sugarCount">∞</div>
   <div id="customerArea"></div>
   <script>
@@ -125,9 +120,9 @@ html_code = '''
     const lemon = document.getElementById("lemon");
     const drinkImage = document.getElementById("drinkImage");
     const sugarImage = document.getElementById("sugarImage");
-    const clickCountSpan = document.getElementById("clickCount");
     const drinkCountSpan = document.getElementById("drinkCount");
     const sugarCountSpan = document.getElementById("sugarCount");
+    const clickCountSpan = document.getElementById("clickCount");
     const customerArea = document.getElementById("customerArea");
 
     lemon.onclick = () => {
@@ -145,44 +140,37 @@ html_code = '''
       sugarCountSpan.textContent = "∞";
     }
 
-    function setupSlide(element, type) {
-      let startY = 0;
-      element.addEventListener("touchstart", e => startY = e.touches[0].clientY);
-      element.addEventListener("touchend", e => {
-        const endY = e.changedTouches[0].clientY;
-        if (endY - startY > 50) {
-          element.classList.add("slide-out");
-          setTimeout(() => {
-            tryServe(type);
-            element.classList.remove("slide-out");
-          }, 500);
-        }
-      });
-    }
+    drinkImage.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", "drink");
+    });
 
-    setupSlide(drinkImage, "drink");
-    setupSlide(sugarImage, "sugar");
+    sugarImage.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", "sugar");
+    });
 
     function tryServe(type) {
       const customer = document.querySelector(".customer");
       if (!customer || !customerExists) return;
+
       let needDrink = +customer.dataset.needDrink || 0;
       let needSugar = +customer.dataset.needSugar || 0;
       let servedDrink = +customer.dataset.servedDrink || 0;
       let servedSugar = +customer.dataset.servedSugar || 0;
+
       if (type === "drink" && servedDrink < needDrink && drinkStock > 0) {
         servedDrink++; drinkStock--;
       }
       if (type === "sugar" && servedSugar < needSugar) {
         servedSugar++;
       }
+
       customer.dataset.servedDrink = servedDrink;
       customer.dataset.servedSugar = servedSugar;
       updateUI();
+
       if (servedDrink >= needDrink && servedSugar >= needSugar) {
         customer.querySelector(".request").textContent = "感謝光臨！";
-        customer.classList.add("slide-out");
-        setTimeout(() => removeCustomer(customer), 1500);
+        setTimeout(() => removeCustomer(customer), 1000);
       }
     }
 
@@ -191,38 +179,41 @@ html_code = '''
       customerExists = true; customerCount++;
       const customer = document.createElement("div");
       customer.className = "customer";
-      const elapsed = (Date.now() - startTime) / 1000;
-      const isAfter2Min = elapsed >= 120;
+      const isAfter2Min = (Date.now() - startTime) > 120000;
       const isCustomer3 = customerCount % (Math.floor(Math.random() * 6) + 15) === 0;
       const useCustomer2 = !isCustomer3 && isAfter2Min && Math.random() < 0.5;
       const imageName = isCustomer3 ? "客人3.png" : useCustomer2 ? "客人2.png" : "客人1.png";
       const needDrink = isCustomer3 ? Math.floor(Math.random() * 2) + 1 : Math.floor(Math.random() * 5) + 1;
       const needSugar = isCustomer3 ? 30 : Math.floor(Math.random() * 4);
-      const waitTime = isFirstCustomer ? 30000 : isCustomer3 ? 10000 + Math.random()*2000 :
+      const waitTime = isCustomer3 ? 10000 + Math.random()*2000 :
                         useCustomer2 ? 9000 + Math.random()*3000 : 12000 + Math.random()*5000;
+
       customer.dataset.needDrink = needDrink;
       customer.dataset.needSugar = needSugar;
       customer.dataset.servedDrink = 0;
       customer.dataset.servedSugar = 0;
       customer.dataset.type = isCustomer3 ? "3" : useCustomer2 ? "2" : "1";
-      customer.innerHTML = `
-        <img src="${imageName}">
-        <div class="request">我要 ${needDrink} 杯🍋 ${needSugar > 0 ? " + " + needSugar + " 糖" : ""}</div>
-      `;
+      customer.innerHTML = `<img src="${imageName}"><div class="request">我要 ${needDrink} 杯🍋 ${needSugar > 0 ? "+ " + needSugar + " 糖" : ""}</div>`;
       customerArea.appendChild(customer);
+
+      customer.addEventListener("dragover", e => e.preventDefault());
+      customer.addEventListener("drop", e => {
+        e.preventDefault();
+        const type = e.dataTransfer.getData("text/plain");
+        tryServe(type);
+      });
+
       customer.timeout = setTimeout(() => {
-        let servedD = +customer.dataset.servedDrink;
-        let servedS = +customer.dataset.servedSugar;
-        if (servedD < needDrink || servedS < needSugar) {
+        if (+customer.dataset.servedDrink < +customer.dataset.needDrink ||
+            +customer.dataset.servedSugar < +customer.dataset.needSugar) {
           customer.querySelector(".request").textContent = "生氣離開了！";
           customer.querySelector(".request").classList.add("angry");
           if (customer.dataset.type === "2") {
             drinkStock = Math.floor(drinkStock * 0.25);
           }
-          customer.classList.add("slide-out");
           setTimeout(() => removeCustomer(customer), 1500);
         }
-      }, waitTime);
+      }, isFirstCustomer ? 30000 : waitTime);
       isFirstCustomer = false;
     }
 
@@ -240,9 +231,9 @@ html_code = '''
 </html>
 '''
 
-# 輸出成檔案
-path = "/mnt/data/index_fixed_slide_bug_v5.html"
-with open(path, "w", encoding="utf-8") as f:
-    f.write(html_code)
+# 輸出檔案
+drag_path = "/mnt/data/index_drag_drop_no_animation.html"
+with open(drag_path, "w", encoding="utf-8") as f:
+    f.write(html_code_drag)
 
-path
+drag_path
