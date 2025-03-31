@@ -1,14 +1,14 @@
-# 寫入實際的完整 HTML 程式碼（符合最新邏輯：客人居中 + 白糖無限）
-html_code = '''<!DOCTYPE html>
+# 重新建立 HTML 檔案（修正滑動後不觸發送出的 BUG - 方案 A）
+html_code = '''
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>張家檸檬傳說</title>
+  <title>張家檸檬傳說 - 修正BUG</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       height: 100%;
       font-family: "Microsoft YaHei", sans-serif;
       background: url('背景1.png') center/cover no-repeat;
@@ -20,7 +20,6 @@ html_code = '''<!DOCTYPE html>
       inset: 0;
       backdrop-filter: blur(8px);
       z-index: 0;
-      pointer-events: none;
     }
     .game-area {
       position: relative;
@@ -151,14 +150,20 @@ html_code = '''<!DOCTYPE html>
       element.addEventListener("touchstart", e => startY = e.touches[0].clientY);
       element.addEventListener("touchend", e => {
         const endY = e.changedTouches[0].clientY;
-        if (endY - startY > 50) tryServe(type, element);
+        if (endY - startY > 50) {
+          element.classList.add("slide-out");
+          setTimeout(() => {
+            tryServe(type);
+            element.classList.remove("slide-out");
+          }, 500);
+        }
       });
     }
 
     setupSlide(drinkImage, "drink");
     setupSlide(sugarImage, "sugar");
 
-    function tryServe(type, element) {
+    function tryServe(type) {
       const customer = document.querySelector(".customer");
       if (!customer || !customerExists) return;
       let needDrink = +customer.dataset.needDrink || 0;
@@ -173,9 +178,7 @@ html_code = '''<!DOCTYPE html>
       }
       customer.dataset.servedDrink = servedDrink;
       customer.dataset.servedSugar = servedSugar;
-      element.classList.add("slide-out");
       updateUI();
-      setTimeout(() => element.classList.remove("slide-out"), 500);
       if (servedDrink >= needDrink && servedSugar >= needSugar) {
         customer.querySelector(".request").textContent = "感謝光臨！";
         customer.classList.add("slide-out");
@@ -235,3 +238,11 @@ html_code = '''<!DOCTYPE html>
   </script>
 </body>
 </html>
+'''
+
+# 輸出成檔案
+path = "/mnt/data/index_fixed_slide_bug_v5.html"
+with open(path, "w", encoding="utf-8") as f:
+    f.write(html_code)
+
+path
