@@ -1,450 +1,581 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>張家檸檬店</title>
   <style>
-    body {
+    * {
       margin: 0;
-      overflow: hidden;
-      background-color: #000;
-      font-family: '微軟正黑體', sans-serif;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-drag: none;
     }
-
-    #game-container {
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "微軟正黑體", sans-serif;
+      background-color: black;
+    }
+    .game-container {
       position: relative;
       width: 100vw;
       height: 100vh;
       overflow: hidden;
     }
-
-    .background {
+    #background {
       position: absolute;
       width: 100%;
       height: 100%;
-      z-index: 0;
       object-fit: cover;
+      z-index: 0;
     }
-
-    #score-board {
+    #timer, #day {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 1vh;
+      font-size: 2.2vw;
+      font-weight: 900;
       color: white;
-      font-weight: bold;
-      font-size: 1.4em;
-      text-shadow: 2px 2px 0 #000;
-      z-index: 10;
-    }
-
-    #day-count {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      color: white;
-      font-weight: bold;
-      font-size: 1.4em;
-      text-shadow: 2px 2px 0 #000;
-      z-index: 10;
-    }
-
-    #lemon-logo {
-      position: absolute;
-      right: 30px;
-      bottom: 30px;
-      width: 150px;
-      z-index: 12;
-    }
-
-    .ingredient {
-      position: absolute;
-      bottom: 20px;
-      width: 90px;
-      user-select: none;
-      z-index: 15;
-    }
-
-    #lemon {
-      right: 130px;
-    }
-
-    #sugar {
-      left: 20px;
-    }
-
-    .ingredient-count {
-      position: absolute;
-      bottom: 10px;
-      font-size: 20px;
-      font-weight: bold;
-      color: white;
-      text-shadow: 2px 2px 0 #000;
-      z-index: 16;
-    }
-
-    .customer {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 180px;
-      transition: opacity 0.5s;
-      z-index: 5;
-    }
-
-    .dialogue {
-      position: absolute;
-      bottom: 20px;
-      left: 55%;
-      transform: translateX(0%);
-      font-size: 18px;
-      color: white;
-      font-weight: bold;
-      padding: 10px 16px;
-      background-color: rgba(0, 0, 0, 0.6);
-      border-radius: 12px;
-      text-shadow: 2px 2px 0 black;
-      z-index: 11;
-    }
-
-    #continue-btn {
-      position: absolute;
-      bottom: 50%;
-      left: 50%;
-      transform: translate(-50%, 50%);
-      background-color: #ffc107;
-      padding: 16px 32px;
-      font-size: 24px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px black;
-      display: none;
+      text-shadow: 2px 2px black;
       z-index: 20;
     }
-
-    #ghost-cg {
+    #timer { left: 2vw; }
+    #day { right: 2vw; }
+    .item {
       position: absolute;
+      width: 9vw;
+      cursor: pointer;
+      z-index: 10;
+    }
+    #lemonDrink { top: 40%; right: 8vw; }
+    #lemonDrinkCount {
+      position: absolute;
+      right: 8vw;
+      top: 36%;
+      font-size: 2vw;
+      font-weight: bold;
+      color: white;
+      text-shadow: 2px 2px black;
+      z-index: 11;
+    }
+    #sugar { top: 40%; left: 4vw; }
+    #buddhaBook {
+      bottom: 3vh;
+      right: 2vw;
+      width: 8vw;
+      display: none;
+      z-index: 10;
+    }
+    #lemon {
+      left: 45vw;
+      top: 20%;
+      width: 8vw;
+      z-index: 10;
+    }
+    #customer {
+      bottom: 0;
+      left: 0;
+      width: 30vw;
+      z-index: 15;
+      position: absolute;
+      display: none;
+      transition: all 0.5s ease;
+    }
+    #dialogue {
+      position: absolute;
+      bottom: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: auto;
+      max-width: 70vw;
+      color: white;
+      font-size: 1.8vw;
+      text-shadow: 2px 2px black;
+      z-index: 16;
+      display: none;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 1vw 2vw;
+      border-radius: 1vw;
+    }
+    #scoreBoard {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
+      background: rgba(0, 0, 0, 0.9);
       z-index: 100;
+      color: white;
+      text-align: center;
+      font-size: 2vw;
       display: none;
+    }
+    #scoreText {
+      margin-top: 30vh;
+    }
+    button {
+      margin-top: 2vh;
+      padding: 1vh 3vw;
+      font-size: 1.5vw;
+    }
+    .shake {
+      animation: shake 0.3s infinite;
+    }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      25% { transform: translate(-1px, -2px) rotate(-1deg); }
+      50% { transform: translate(-3px, 0px) rotate(1deg); }
+      75% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -1px) rotate(1deg); }
     }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <img id="bg" class="background" src="背景1.png" alt="背景">
-    
-    <div id="score-board">剩餘時間：2:00</div>
-    <div id="day-count">第 1 天</div>
-    
-    <img id="lemon" class="ingredient" src="檸檬圖片1.png" alt="檸檬">
-    <div class="ingredient-count" style="right: 130px; bottom: 110px;" id="lemon-count">x 0</div>
-    
-    <img id="sugar" class="ingredient" src="白糖1.png" alt="白糖">
-    <div class="ingredient-count" style="left: 20px; bottom: 110px;" id="sugar-count">∞</div>
-    
-    <img id="buddha" class="ingredient" src="佛書1.png" alt="佛書" style="right: 20px; display: none;">
-    
-    <img id="customer" class="customer" src="客人1.png" style="display: none;">
-    <div id="dialogue" class="dialogue" style="display: none;"></div>
-    
-    <img id="ghost-cg" src="女鬼CG1.png" alt="女鬼CG">
-    
-    <button id="continue-btn">繼續遊戲</button>
+  <div class="game-container">
+    <img id="background" src="背景1.png" alt="背景" />
+    <div id="timer">02:00</div>
+    <div id="day">Day 1</div>
+    <!-- 客人圖片 -->
+    <img id="customer" src="" />
+
+    <!-- 對話框 -->
+    <div id="dialogue"></div>
+
+    <!-- 檸檬飲料圖（右上角） -->
+    <img id="lemonDrink" class="item" src="檸檬飲料圖片1.png" draggable="false" />
+    <div id="lemonDrinkCount">0</div>
+
+    <!-- 白糖圖（左上角） -->
+    <img id="sugar" class="item" src="白糖1.png" draggable="false" />
+
+    <!-- 佛書（任務獲得才會顯示） -->
+    <img id="buddhaBook" class="item" src="佛書1.png" draggable="false" />
+
+    <!-- 檸檬圖（中間偏左） -->
+    <img id="lemon" class="item" src="檸檬圖片1.png" draggable="false" />
+
+    <!-- 分數結算畫面 -->
+    <div id="scoreBoard">
+      <div id="scoreText">得分：0</div>
+      <button onclick="nextDay()">繼續遊戲</button>
+    </div>
   </div>
+<script>
+let day = 1;
+let timeLeft = 120;
+let lemonCount = 0;
+let score = 0;
+let buddhaShown = false;
+let customerActive = false;
+let customer8Converted = false;
+let customerTimer = null;
+let ghostDays = [3, 7, 10, 15];
+let ghostDone = [false, false, false, false];
+let ghostCGTriggered = false;
+let customer5Fails = [false, false, false, false];
+let customer5StoryDone = false;
 
-  <script>
-    // JavaScript 程式碼將於下一段提供
-    let lemonClick = 0;
-    let lemonStock = 0;
-    let score = 0;
-    let day = 1;
-    let timer;
-    let timeLeft = 120;
-    let ghostDays = [3, 7, 10, 15];
-    let ghostPassed = new Set();
-    let ghostFinalTriggered = false;
-    let currentCustomer = null;
-    let buddhaShown = false;
-    let isGamePaused = false;
+const background = document.getElementById("background");
+const timer = document.getElementById("timer");
+const dayText = document.getElementById("day");
+const lemonDrink = document.getElementById("lemonDrink");
+const lemonDrinkCount = document.getElementById("lemonDrinkCount");
+const sugar = document.getElementById("sugar");
+const buddhaBook = document.getElementById("buddhaBook");
+const lemon = document.getElementById("lemon");
+const customer = document.getElementById("customer");
+const dialogue = document.getElementById("dialogue");
+const scoreBoard = document.getElementById("scoreBoard");
+const scoreText = document.getElementById("scoreText");
 
-    const bg = document.getElementById("bg");
-    const lemonCount = document.getElementById("lemon-count");
-    const sugarCount = document.getElementById("sugar-count");
-    const lemonLogo = document.getElementById("lemon-logo");
-    const customerImg = document.getElementById("customer");
-    const dialogueBox = document.getElementById("dialogue");
-    const ghostCG = document.getElementById("ghost-cg");
-    const continueBtn = document.getElementById("continue-btn");
-    const scoreBoard = document.getElementById("score-board");
-    const dayCount = document.getElementById("day-count");
+function formatTime(t) {
+  const m = Math.floor(t / 60).toString().padStart(2, '0');
+  const s = (t % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
 
-    function updateCountUI() {
-      lemonCount.innerText = `x ${lemonStock}`;
-      sugarCount.innerText = `∞`;
+function updateUI() {
+  timer.textContent = formatTime(timeLeft);
+  dayText.textContent = `Day ${day}`;
+  lemonDrinkCount.textContent = lemonCount;
+}
+
+function nextDay() {
+  day++;
+  startGame();
+}
+function startGame() {
+  timeLeft = 120;
+  lemonCount = 0;
+  customerActive = false;
+  updateUI();
+  background.src = "背景1.png";
+  scoreBoard.style.display = "none";
+  buddhaBook.style.display = customer8Converted ? "block" : "none";
+  customer.style.display = "none";
+  dialogue.style.display = "none";
+
+  spawnCustomer();
+
+  const timerInterval = setInterval(() => {
+    timeLeft--;
+    updateUI();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      endGame();
+    }
+  }, 1000);
+}
+
+let lemonClickCount = 0;
+
+lemon.addEventListener("click", () => {
+  lemonClickCount++;
+  lemon.style.transform = "scale(1.2)";
+  setTimeout(() => lemon.style.transform = "scale(1)", 100);
+  if (navigator.vibrate) navigator.vibrate(50);
+
+  if (lemonClickCount >= 10) {
+    lemonClickCount = 0;
+    lemonCount++;
+    lemonDrinkCount.textContent = lemonCount;
+    lemonDrink.style.transform = "scale(1.3)";
+    setTimeout(() => lemonDrink.style.transform = "scale(1)", 100);
+  }
+});
+function spawnCustomer() {
+  if (customerActive) return;
+
+  customerActive = true;
+
+  // 客人類型
+  let customerType = randomCustomerType();
+  customer.dataset.type = customerType;
+
+  // 圖片設定
+  if (customerType === 8 && customer8Converted) {
+    customer.src = "客人8開心.png";
+  } else {
+    customer.src = `客人${customerType}.png`;
+  }
+
+  customer.style.display = "block";
+
+  // 任務需求
+  let lemonNeed = generateLemonNeed(customerType);
+  let sugarNeed = generateSugarNeed(customerType);
+  customer.dataset.lemon = lemonNeed;
+  customer.dataset.sugar = sugarNeed;
+
+  // 顯示對話
+  dialogue.textContent = getCustomerDialogue(customerType, lemonNeed, sugarNeed);
+  dialogue.style.display = "block";
+
+  // 設定等待時間
+  let waitTime = getCustomerWaitTime(customerType);
+  customer.dataset.wait = waitTime;
+
+  customerTimer = setTimeout(() => {
+    if (customerActive) handleFail(customerType);
+  }, waitTime * 1000);
+}
+
+function generateLemonNeed(type) {
+  if (type === 3) return randomRange(1, 2);
+  if (type === 5) return 1;
+  if (type === 8 && !customer8Converted) return 0;
+  return randomRange(1, 5);
+}
+
+function generateSugarNeed(type) {
+  if (type === 3) return 30;
+  if (type === 5 || (type === 8 && !customer8Converted)) return 0;
+  return randomRange(0, 3);
+}
+
+function getCustomerDialogue(type, lemon, sugar) {
+  if (type === 8 && !customer8Converted) return "這什麼破店啊，氣死我了！";
+  if (type === 5 && lemon > 0) return `我要 ${lemon} 杯檸檬茶`;
+
+  let text = "我要 ";
+  if (sugar > 0) text += `${sugar} 份白糖 `;
+  if (lemon > 0) text += `${lemon} 杯檸檬茶`;
+  return text.trim();
+}
+
+function getCustomerWaitTime(type) {
+  if (day === 1) return 30;
+  if (type === 2) return randomRange(12, 17);
+  if (type === 3) return randomRange(10, 12);
+  if (type === 8) return 15;
+  return randomRange(12, 17);
+}
+
+function randomRange(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomCustomerType() {
+  if (day < 2) return 1;
+  const types = [1, 2, 3, 5, 6, 7, 8]; // 去除 4（保留擴展空間）
+  return types[Math.floor(Math.random() * types.length)];
+}
+// 拖曳機制
+let draggedItem = null;
+
+[lemonDrink, sugar, buddhaBook].forEach(item => {
+  item.addEventListener("touchstart", e => {
+    draggedItem = item;
+  });
+  item.addEventListener("mousedown", e => {
+    draggedItem = item;
+  });
+});
+
+customer.addEventListener("touchend", handleDrop);
+customer.addEventListener("mouseup", handleDrop);
+
+function handleDrop() {
+  if (!draggedItem || !customerActive) return;
+
+  const type = customer.dataset.type;
+  let lemonNeed = parseInt(customer.dataset.lemon || 0);
+  let sugarNeed = parseInt(customer.dataset.sugar || 0);
+
+  const itemId = draggedItem.id;
+
+  if (itemId === "lemonDrink" && lemonCount > 0 && lemonNeed > 0) {
+    lemonCount--;
+    lemonNeed--;
+    customer.dataset.lemon = lemonNeed;
+  }
+  else if (itemId === "sugar" && sugarNeed > 0) {
+    sugarNeed--;
+    customer.dataset.sugar = sugarNeed;
+  }
+  else if (itemId === "buddhaBook" && type === "8" && !customer8Converted) {
+    customer.src = "客人8開心.png";
+    customer8Converted = true;
+    dialogue.textContent = "謝謝你…（不罵了）";
+    return;
+  }
+  else {
+    // 任務錯誤處理（客人5 或 其他錯誤給道具）
+    if (type === "5") {
+      customer.src = "客人5難過.png";
+      customer.dataset.fail = "true";
+    }
+    return;
+  }
+
+  updateUI();
+  checkTaskComplete();
+}
+
+function checkTaskComplete() {
+  const lemonLeft = parseInt(customer.dataset.lemon || 0);
+  const sugarLeft = parseInt(customer.dataset.sugar || 0);
+  if (lemonLeft <= 0 && sugarLeft <= 0) {
+    completeTask();
+  }
+}
+
+function completeTask() {
+  clearTimeout(customerTimer);
+  customerActive = false;
+
+  const type = parseInt(customer.dataset.type);
+  dialogue.textContent = "謝謝！";
+
+  if (type === 6) {
+    dialogue.textContent = "這店家得了 MVP！";
+  }
+  if (type === 7) {
+    dialogue.textContent = "南無阿彌陀佛~";
+    buddhaBook.style.display = "block";
+  }
+
+  if (type === 5 && customer.dataset.fail === "true") {
+    score -= 5;
+  } else {
+    score += (type >= 5 && type <= 8) ? 20 : 10;
+  }
+
+  customer.style.transform = "translateX(100vw)";
+  setTimeout(() => {
+    customer.style.display = "none";
+    dialogue.style.display = "none";
+    customer.style.transform = "translateX(0)";
+    spawnNextCustomer();
+  }, 1000);
+}
+
+function handleFail(type) {
+  customerActive = false;
+
+  if (type == 2) {
+    lemonCount = Math.floor(lemonCount * 0.25);
+  }
+
+  if (type == 5 && day <= 15) {
+    const failIndex = [5,8,12,15].indexOf(day);
+    if (failIndex !== -1) customer5Fails[failIndex] = true;
+  }
+
+  score -= 5;
+
+  dialogue.textContent = "（客人生氣離開）";
+  customer.style.transform = "translateX(100vw)";
+  setTimeout(() => {
+    customer.style.display = "none";
+    dialogue.style.display = "none";
+    customer.style.transform = "translateX(0)";
+    spawnNextCustomer();
+  }, 1000);
+}
+function spawnNextCustomer() {
+  setTimeout(() => {
+    if (day === 20 && !ghostCGTriggered) {
+      triggerGhostCG();
+    } else if (day === 17 && !customer5StoryDone && customer5Fails.every(v => v)) {
+      triggerCustomer5CG();
+    } else {
+      spawnCustomer();
+    }
+  }, randomRange(3000, 7000));
+}
+
+// 👻 女鬼劇情觸發點（第 3, 7, 10, 15 天）
+function checkGhostDay() {
+  const ghostIndex = ghostDays.indexOf(day);
+  if (ghostIndex === -1 || ghostDone[ghostIndex]) return false;
+
+  setTimeout(() => {
+    spawnGhost(ghostIndex);
+  }, 10000);
+
+  return true;
+}
+
+function spawnGhost(index) {
+  customer.dataset.type = 'ghost';
+  customer.src = "女鬼1.png";
+  customer.style.display = "block";
+  const lemonNeed = randomRange(1, 3);
+  const sugarNeed = randomRange(0, 2);
+  customer.dataset.lemon = lemonNeed;
+  customer.dataset.sugar = sugarNeed;
+  dialogue.textContent = getCustomerDialogue(1, lemonNeed, sugarNeed);
+  dialogue.style.display = "block";
+
+  customerTimer = setTimeout(() => {
+    handleFail('ghost');
+  }, randomRange(12, 17) * 1000);
+}
+
+function completeGhost(index) {
+  customer.src = "女鬼2.png";
+  ghostDone[index] = true;
+  setTimeout(() => {
+    endGame();
+  }, 5000);
+}
+
+// 🌕 女鬼CG 第 20 天事件
+function triggerGhostCG() {
+  ghostCGTriggered = true;
+  let steps = [
+    "（不小心脚滑跌倒）",
+    "你沒事嗎",
+    "（突然看到一個女生）",
+    "CG",  // CG轉換
+    "謝謝你，你的檸檬茶很好喝，",
+    "但是我有事情，我必須離開這裡了，",
+    "下次有機會再見面。"
+  ];
+  let i = 0;
+
+  function next() {
+    if (i === 3) {
+      background.src = "女鬼CG1.png";
+    } else if (i < steps.length) {
+      dialogue.textContent = steps[i];
+      dialogue.style.display = "block";
     }
 
-    function startGame() {
-      timeLeft = 120;
-      isGamePaused = false;
-      score = 0;
-      lemonClick = 0;
-      lemonStock = 0;
-      updateCountUI();
-      updateTimerUI();
-      bg.src = "背景1.png";
-      lemonLogo.style.right = "30px";
-      lemonLogo.style.bottom = "30px";
-      ghostCG.style.display = "none";
-      continueBtn.style.display = "none";
-      dialogueBox.style.display = "none";
-      customerImg.style.display = "none";
-
-      timer = setInterval(() => {
-        if (timeLeft <= 0) {
-          clearInterval(timer);
-          onGameEnd();
-        } else {
-          timeLeft--;
-          updateTimerUI();
-        }
-      }, 1000);
+    i++;
+    if (i < steps.length) {
+      setTimeout(next, i === 3 ? 3000 : 2000);
+    } else {
+      dialogue.style.display = "none";
+      background.src = "背景晚上1.png";
+      setTimeout(() => endGame(), 3000);
     }
+  }
 
-    function updateTimerUI() {
-      const min = Math.floor(timeLeft / 60);
-      const sec = timeLeft % 60;
-      scoreBoard.innerText = `剩餘時間：${min}:${sec < 10 ? '0' : ''}${sec}`;
-    }
+  background.src = "背景晚上1.png";
+  setTimeout(next, 1000);
+}
 
-    document.getElementById("lemon").addEventListener("click", () => {
-      if (isGamePaused) return;
-      lemonClick++;
-      const lemon = document.getElementById("lemon");
-      lemon.style.transform = "scale(0.9)";
-      setTimeout(() => { lemon.style.transform = "scale(1)"; }, 100);
-      if (lemonClick >= 10) {
-        lemonClick = 0;
-        lemonStock++;
-        updateCountUI();
-      }
-    });
-    function spawnCustomer(type = "normal") {
-      if (isGamePaused) return;
-      customerImg.style.display = "block";
-      dialogueBox.style.display = "block";
+// 🧃 客人5 CG 對話觸發（第 17 天）
+function triggerCustomer5CG() {
+  customer.style.display = "none";
+  dialogue.style.display = "none";
+  background.src = "客人5CG1.png";
 
-      let needLemon = Math.floor(Math.random() * 5) + 1;
-      let needSugar = Math.floor(Math.random() * 4);
-      let image = "客人1.png";
+  let msgs = [
+    ". . . . . .",
+    "那個我說不加糖...",
+    "你還加糖給我...",
+    "CG",
+    "下次可以...",
+    "麻煩不要再加糖給我...",
+    "...."
+  ];
+  let idx = 0;
 
-      if (type === "ghost") {
-        image = "女鬼1.png";
-        needSugar = Math.floor(Math.random() * 3);
-      }
-
-      if (type === "ghost2") {
-        image = "女鬼2.png";
-      }
-
-      if (type === "ghostFinal") {
-        triggerGhostEnding();
-        return;
-      }
-
-      if (type === "5") {
-        image = "客人5.png";
-        needSugar = 0;
-      }
-
-      currentCustomer = {
-        type,
-        lemon: needLemon,
-        sugar: needSugar,
-        servedLemon: 0,
-        servedSugar: 0,
-      };
-
-      customerImg.src = image;
-      dialogueBox.innerText = `我要 ${needLemon} 杯飲料 ${needSugar > 0 ? "+ " + needSugar + " 糖" : ""}`;
-
-      let waitTime = 15000;
-      if (type === "ghost") waitTime = 30000;
-
-      setTimeout(() => {
-        if (currentCustomer && !isGamePaused) {
-          failCustomer();
-        }
-      }, waitTime);
-    }
-
-    function deliverItem(type) {
-      if (!currentCustomer || isGamePaused) return;
-      if (type === "lemon" && currentCustomer.servedLemon < currentCustomer.lemon && lemonStock > 0) {
-        currentCustomer.servedLemon++;
-        lemonStock--;
-        updateCountUI();
-      }
-      if (type === "sugar" && currentCustomer.servedSugar < currentCustomer.sugar) {
-        currentCustomer.servedSugar++;
-      }
-      if (type === "buddha" && currentCustomer.type === "8") {
-        currentCustomer.type = "8開心";
-        customerImg.src = "客人8開心.png";
-        dialogueBox.innerText = "心靈被淨化了……";
-        return setTimeout(() => endCustomer(true), 1500);
-      }
-
-      if (
-        currentCustomer.servedLemon >= currentCustomer.lemon &&
-        currentCustomer.servedSugar >= currentCustomer.sugar
-      ) {
-        if (currentCustomer.type === "5" && (type === "sugar" || type === "buddha")) {
-          customerImg.src = "客人5難過.png";
-        }
-        if (currentCustomer.type === "7") {
-          buddhaShown = true;
-          document.getElementById("buddha").style.display = "block";
-          dialogueBox.innerText = "南無阿彌陀佛～";
-        } else if (currentCustomer.type === "6") {
-          dialogueBox.innerText = "這店家得了 MVP！";
-        } else {
-          dialogueBox.innerText = "感謝光臨！";
-        }
-
-        if (currentCustomer.type === "ghost") {
-          setTimeout(() => {
-            customerImg.src = "女鬼2.png";
-            setTimeout(() => endCustomer(true), 5000);
-          }, 500);
-        } else {
-          setTimeout(() => endCustomer(true), 1500);
-        }
+  function next() {
+    if (msgs[idx] === "CG") {
+      background.src = "客人5CG2.png";
+      idx++;
+      setTimeout(next, 3000);
+    } else {
+      dialogue.textContent = msgs[idx];
+      dialogue.style.display = "block";
+      idx++;
+      if (idx < msgs.length) {
+        setTimeout(next, 2000);
+      } else {
+        dialogue.style.display = "none";
+        background.src = "背景1.png";
+        customer5StoryDone = true;
+        score += 20;
+        spawnCustomer();
       }
     }
-    function failCustomer() {
-      if (!currentCustomer) return;
-      if (currentCustomer.type === "2") {
-        lemonStock = Math.floor(lemonStock * 0.25);
-        updateCountUI();
-      }
-      dialogueBox.innerText = "他生氣走了！";
-      setTimeout(() => endCustomer(false), 1500);
-    }
+  }
 
-    function endCustomer(success) {
-      currentCustomer = null;
-      customerImg.style.display = "none";
-      dialogueBox.style.display = "none";
-      if (success) score += 10;
-      else score -= 5;
-      setTimeout(spawnCustomer, Math.random() * 3000 + 3000);
-    }
+  setTimeout(next, 1000);
+}
+function endGame() {
+  customer.style.display = "none";
+  dialogue.style.display = "none";
+  background.src = "背景晚上1.png";
 
-    function onGameEnd() {
-      isGamePaused = true;
-      bg.src = "背景晚上1.png";
+  setTimeout(() => {
+    scoreBoard.style.display = "block";
+    scoreText.textContent = `得分：${score}`;
+  }, 1000);
+}
 
-      // 女鬼特別邏輯
-      if (ghostDays.includes(day) && !ghostPassed.has(day)) {
-        setTimeout(() => {
-          spawnCustomer("ghost");
-          ghostPassed.add(day);
-        }, 10000);
-        return;
-      }
-
-      // 最終女鬼劇情
-      if (day === 20 && ghostDays.every(d => ghostPassed.has(d)) && !ghostFinalTriggered) {
-        ghostFinalTriggered = true;
-        setTimeout(() => spawnCustomer("ghostFinal"), 10000);
-        return;
-      }
-
-      // 普通分數結算
-      setTimeout(() => {
-        continueBtn.style.display = "block";
-      }, 1500);
-    }
-
-    function triggerGhostEnding() {
-      let step = 0;
-      const sequence = [
-        () => (dialogueBox.innerText = "（不小心脚滑跌倒）", dialogueBox.style.display = "block"),
-        () => (dialogueBox.innerText = "你沒事嗎？"),
-        () => (bg.src = "背景1.png"),
-        () => (dialogueBox.innerText = "（突然看到一個女生）"),
-        () => (ghostCG.style.display = "block"),
-        () => (dialogueBox.innerText = "謝謝你，你的檸檬茶很好喝，"),
-        () => (dialogueBox.innerText = "但是我有事情，我必須離開這裡了，"),
-        () => (dialogueBox.innerText = "下次有機會再見面。"),
-        () => {
-          ghostCG.style.display = "none";
-          bg.src = "背景晚上1.png";
-        },
-        () => {
-          dialogueBox.style.display = "none";
-          continueBtn.style.display = "block";
-        },
-      ];
-
-      function nextStep() {
-        if (step < sequence.length) {
-          sequence[step++]();
-          const delay = step === 1 ? 3000 : step === 3 ? 3000 : step === 8 ? 3000 : 2000;
-          setTimeout(nextStep, delay);
-        }
-      }
-
-      nextStep();
-    }
-
-    function setupDrag(id, type) {
-      const el = document.getElementById(id);
-      el.addEventListener("touchstart", e => {
-        const touch = e.touches[0];
-        el.dataset.offsetX = touch.clientX - el.offsetLeft;
-        el.dataset.offsetY = touch.clientY - el.offsetTop;
-      });
-
-      el.addEventListener("touchmove", e => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        el.style.left = `${touch.clientX - el.dataset.offsetX}px`;
-        el.style.top = `${touch.clientY - el.dataset.offsetY}px`;
-      });
-
-      el.addEventListener("touchend", () => {
-        const c = customerImg.getBoundingClientRect();
-        const r = el.getBoundingClientRect();
-        if (
-          r.right > c.left &&
-          r.left < c.right &&
-          r.bottom > c.top &&
-          r.top < c.bottom
-        ) {
-          deliverItem(type);
-        }
-        el.style.left = "";
-        el.style.top = "";
-      });
-    }
-
-    setupDrag("lemon", "lemon");
-    setupDrag("sugar", "sugar");
-    setupDrag("buddha", "buddha");
-
-    continueBtn.addEventListener("click", () => {
-      day++;
-      dayCount.innerText = `第 ${day} 天`;
-      startGame();
-    });
-
-    startGame();
-  </script>
+// 啟動流程
+document.addEventListener("DOMContentLoaded", () => {
+  updateUI();
+  startGame();
+});
+</script>
 </body>
 </html>
+
