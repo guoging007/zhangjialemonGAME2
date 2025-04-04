@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>張家檸檬傳說 V2</title>
   <style>
     html, body {
@@ -28,7 +27,7 @@
       font-size: 20px;
       font-weight: bold;
       color: white;
-      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+      text-shadow: 2px 2px 4px #000;
     }
     .centered {
       display: flex;
@@ -50,7 +49,7 @@
       font-weight: bold;
       color: white;
       z-index: 5;
-      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+      text-shadow: 2px 2px 4px #000;
     }
     #drinkCount { right: 55px; }
     #sugarCount { left: 55px; }
@@ -71,8 +70,6 @@
       max-height: 90vh;
     }
     .request {
-  color: white;
-  text-shadow: 2px 2px 4px #000000;
       margin-left: 16px;
       background: #fff3cd;
       border: 2px solid #e0b800;
@@ -81,7 +78,8 @@
       font-size: 22px;
       font-weight: bold;
       white-space: nowrap;
-      color: #000;
+      color: white;
+      text-shadow: 2px 2px 4px #000;
     }
     .angry {
       background-color: #f44336 !important;
@@ -117,46 +115,45 @@
       display: none;
       z-index: 3;
     }
-    body, .request, #timer, #day, #finalScore, #scoreBoard button {text-shadow: 2px 2px 4px #000000;}
-</style>
+  </style>
 </head>
 <body>
   <div class="game-ui">
     <div id="timer">剩餘時間：2:00</div>
     <div id="day">第 1 天</div>
   </div>
+
   <div class="centered">
-    <h1 style="color:white;text-shadow:2px 2px 0 #000;">🍋 張家檸檬傳說</h1>
-    <p style="color:white;">點檸檬10下 → 產出飲料</p>
+    <img src="檸檬店名.png" alt="logo" style="width:320px;margin-top:10px;" />
+    <p style="color:white;text-shadow:2px 2px 4px #000;">點檸檬10下 → 產出飲料</p>
     <img id="lemon" src="檸檬圖片1.png" alt="檸檬" />
     <p style="color:white;">點擊次數：<span id="clickCount">0</span></p>
   </div>
+
   <img id="drinkImage" class="draggable" src="檸檬飲料圖片1.png" alt="飲料" />
   <div id="drinkCount">x 0</div>
+
   <img id="sugarImage" class="draggable" src="白糖1.png" alt="白糖" />
   <div id="sugarCount">∞</div>
+
   <img id="buddhaBook" src="佛書1.png" alt="佛書" />
+
   <div id="customerArea"></div>
+
   <div id="scoreBoard">
     <h2>今日結算分數</h2>
     <p id="finalScore">0 分</p>
     <button onclick="restartGame()">繼續遊戲</button>
   </div>
-</body>
-</html>
-
 <script>
 let clickCount = 0, drinkStock = 0, score = 0, day = 1, customerExists = false;
-let startTime = Date.now();
-let timerInterval, gameTimeout;
-let currentCustomerType = "";
 let hasBuddhaBook = false;
 let happyCustomer8 = false;
-const timerEl = document.getElementById("timer");
-const dayEl = document.getElementById("day");
 const clickCountEl = document.getElementById("clickCount");
 const drinkCountEl = document.getElementById("drinkCount");
 const sugarCountEl = document.getElementById("sugarCount");
+const timerEl = document.getElementById("timer");
+const dayEl = document.getElementById("day");
 const customerArea = document.getElementById("customerArea");
 const scoreBoard = document.getElementById("scoreBoard");
 const finalScore = document.getElementById("finalScore");
@@ -179,22 +176,21 @@ function updateUI() {
 
 function startTimer() {
   let seconds = 120;
-  timerEl.textContent = `剩餘時間：2:00`;
-  timerInterval = setInterval(() => {
+  timerEl.textContent = "剩餘時間：2:00";
+  const timerInterval = setInterval(() => {
     seconds--;
     if (seconds <= 0) {
       clearInterval(timerInterval);
       endGame();
     } else {
-      const min = Math.floor(seconds / 60);
-      const sec = seconds % 60;
-      timerEl.textContent = `剩餘時間：${min}:${sec < 10 ? '0' : ''}${sec}`;
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      timerEl.textContent = `剩餘時間：${m}:${s < 10 ? "0" : ""}${s}`;
     }
   }, 1000);
 }
 
 function endGame() {
-  clearInterval(timerInterval);
   document.body.classList.add("night");
   finalScore.textContent = `${score} 分`;
   scoreBoard.style.display = "flex";
@@ -209,17 +205,17 @@ function restartGame() {
   customerExists = false;
   hasBuddhaBook = false;
   happyCustomer8 = false;
-  document.body.classList.remove("night");
   scoreBoard.style.display = "none";
   customerArea.innerHTML = "";
+  document.body.classList.remove("night");
   updateUI();
   startTimer();
   spawnCustomer();
 }
 
-startTimer();
-spawnCustomer();
-
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 function spawnCustomer() {
   if (customerExists) return;
   customerExists = true;
@@ -233,20 +229,16 @@ function spawnCustomer() {
     type = Math.random() < 0.5 || day === 1 ? "1" : (happyCustomer8 ? "8開心" : "2");
   }
 
-  currentCustomerType = type;
   const customer = document.createElement("div");
   customer.className = "customer";
-  let drink = 1 + Math.floor(Math.random() * 5);
-  let sugar = type === "5" ? 0 : Math.floor(Math.random() * 4);
-  let wait = type === "3" ? 30000 : type === "2" ? rand(12000,17000) : rand(12000,17000);
+  let drink = rand(1, 5), sugar = rand(0, 3), wait = rand(12000, 17000);
 
+  if (type === "3") { drink = rand(1, 2); sugar = 30; wait = rand(10000, 12000); }
   if (type === "5") { sugar = 0; }
-  if (type === "6" || type === "7") { wait = rand(12000,17000); }
-  if (type === "8") { sugar = 0; drink = 0; wait = 15000; }
-
-  if (type === "3") { drink = rand(1,2); sugar = 30; wait = rand(10000,12000); }
-
-  if (type === "8開心") { drink = rand(1,5); sugar = rand(0,3); wait = rand(12000,17000); }
+  if (type === "6") { /* same as 1 */ }
+  if (type === "7") { /* same as 1 */ }
+  if (type === "8") { drink = 0; sugar = 0; wait = 15000; }
+  if (type === "8開心") { drink = rand(1, 5); sugar = rand(0, 3); }
 
   customer.dataset.needDrink = drink;
   customer.dataset.needSugar = sugar;
@@ -254,9 +246,7 @@ function spawnCustomer() {
   customer.dataset.servedSugar = 0;
   customer.dataset.type = type;
 
-  let image = `客人${type}.png`;
-  if (type === "8開心") image = "客人8開心.png";
-
+  const image = type === "8開心" ? "客人8開心.png" : `客人${type}.png`;
   const fontSize = type === "5" ? "16px" : type === "6" ? "28px" : "22px";
   const text = type === "8"
     ? "你們店員都腦袋有問題是不是？"
@@ -280,16 +270,13 @@ function removeCustomer(customer, success) {
   clearTimeout(customer.timeout);
   customer.remove();
   if (success) {
-    score += (["5","6","7","8開心"].includes(currentCustomerType) ? 20 : 10);
+    const t = customer.dataset.type;
+    score += (["5", "6", "7", "8開心"].includes(t) ? 20 : 10);
   } else {
     score -= 5;
   }
   customerExists = false;
-  setTimeout(spawnCustomer, 3000 + Math.random() * 4000);
-}
-
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min)) + min;
+  setTimeout(spawnCustomer, rand(3000, 7000));
 }
 
 function checkDelivery(type) {
@@ -303,8 +290,7 @@ function checkDelivery(type) {
   const ctype = customer.dataset.type;
 
   if (type === "drink" && servedDrink < needDrink && drinkStock > 0) {
-    servedDrink++;
-    drinkStock--;
+    servedDrink++; drinkStock--;
   }
   if (type === "sugar" && servedSugar < needSugar) {
     servedSugar++;
@@ -336,11 +322,6 @@ function checkDelivery(type) {
     setTimeout(() => removeCustomer(customer, true), 1500);
   }
 }
-
-makeDraggable(document.getElementById("drinkImage"), "drink");
-makeDraggable(document.getElementById("sugarImage"), "sugar");
-makeDraggable(document.getElementById("buddhaBook"), "buddha");
-
 function makeDraggable(el, type) {
   let offsetX, offsetY;
   el.addEventListener("touchstart", e => {
@@ -361,21 +342,23 @@ function makeDraggable(el, type) {
     if (r1.right > r2.left && r1.left < r2.right && r1.bottom > r2.top && r1.top < r2.bottom) {
       checkDelivery(type);
     }
-    
     el.style.transition = "all 0.3s";
     el.style.position = "absolute";
-    el.style.transform = "none";
     el.style.top = "50%";
     el.style.left = "";
     el.style.right = "";
     if (type === "drink") el.style.right = "50px";
     if (type === "sugar") el.style.left = "50px";
     if (type === "buddha") el.style.right = "10px";
-    
-    el.style.top = "50%";
-    if (type === "drink") el.style.right = "50px";
-    if (type === "sugar") el.style.left = "50px";
-    if (type === "buddha") el.style.right = "10px";
   });
 }
+
+makeDraggable(document.getElementById("drinkImage"), "drink");
+makeDraggable(document.getElementById("sugarImage"), "sugar");
+makeDraggable(document.getElementById("buddhaBook"), "buddha");
+
+startTimer();
+spawnCustomer();
 </script>
+</body>
+</html>
