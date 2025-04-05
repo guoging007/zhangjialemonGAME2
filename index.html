@@ -168,10 +168,12 @@
 let day = 1;
 let timeLeft = 120;
 let lemonCount = 0;
+let lemonClickCount = 0;
 let score = 0;
 let buddhaShown = false;
 let customerActive = false;
 let customer8Converted = false;
+let gotBuddhaBook = false;
 let customerTimer = null;
 let ghostDays = [3, 7, 10, 15];
 let ghostDone = [false, false, false, false];
@@ -208,46 +210,45 @@ function nextDay() {
   day++;
   startGame();
 }
-function startGame() {
 
+let extraCustomersThisRound = [];
+
+function startGame() {
   timeLeft = 120;
   lemonCount = 0;
   customerActive = false;
   updateUI();
   background.src = "背景1.png";
   scoreBoard.style.display = "none";
-  buddhaBook.style.display = customer8Converted ? "block" : "none";
+  buddhaBook.style.display = gotBuddhaBook ? "block" : "none";
   customer.style.display = "none";
   dialogue.style.display = "none";
 
-  spawnCustomer();
-
-  const timerInterval = setInterval(() => {
-    timeLeft--;
-    updateUI();
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      endGame();
-
-  let extraCustomersThisRound = [];
-
-  function startGame() {
-  ...
-  // 隨機從 3～8 中挑 1～2 位特殊客人
+  // 每場遊戲先抽出特殊客人
   const candidates = [3, 6, 7, 8];
   extraCustomersThisRound = [];
 
-  const count = randomRange(1, 2); // 出現1或2個
+  const count = randomRange(1, 2);
   while (extraCustomersThisRound.length < count) {
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
     if (!extraCustomersThisRound.includes(pick)) {
       extraCustomersThisRound.push(pick);
     }
-  }, 1000);
+  }
 
-}
+  spawnCustomer();
 
-let lemonClickCount = 0;
+  const timerInterval = setInterval(() => {
+  timeLeft--;
+  updateUI();
+  if (timeLeft <= 0) {
+    clearInterval(timerInterval);
+    endGame();
+  }
+}, 1000); // ✅ 這一行是結尾，不能少！
+
+} // ✅ ←←← 最終正確關閉整個 startGame() 函式
+
 
 lemon.addEventListener("click", () => {
   lemonClickCount++;
@@ -300,12 +301,12 @@ function enableDraggable(imgElement, type) {
   const hit = distance < 100;
 
   if (hit) {
-    handleDrop(); // 或 handleDropItem(type)
+    handleDrop();
   }
 
-  if (clone && clone.parentNode) clone.remove();
-};
-
+  if (clone && clone.parentNode) 
+    clone.remove();
+}
 
 
   // ✅ 一定要保證這行執行
@@ -316,8 +317,6 @@ function enableDraggable(imgElement, type) {
   const leftovers = document.getElementById("dragClone");
   if (leftovers) document.body.removeChild(leftovers);
  }, 5000);
-};
-
 
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
@@ -478,11 +477,12 @@ function completeTask() {
   if (type === 6) {
     dialogue.textContent = "這店家得了 MVP！";
   }
-  if (type === 7) {
-    dialogue.textContent = "南無阿彌陀佛~";
-   buddhaBook.style.display = "block";
-   enableDraggable(buddhaBook, "buddha"); // 再綁一次保險
-  }
+ if (type === 7) {
+  dialogue.textContent = "南無阿彌陀佛~";
+  buddhaBook.style.display = "block";
+  enableDraggable(buddhaBook, "buddha");
+  gotBuddhaBook = true;
+}
 
   if (type === 5 && customer.dataset.fail === "true") {
     score -= 5;
