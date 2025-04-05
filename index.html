@@ -76,13 +76,12 @@
       z-index: 10;
     }
     #customer {
-      bottom: 0;
-      left: 0;
+      position: absolute;
+      left: 50%;
+      bottom: 10vh;
+      transform: translateX(-50%);
       width: 30vw;
       z-index: 15;
-      position: absolute;
-      display: none;
-      transition: all 0.5s ease;
     }
     #dialogue {
       position: absolute;
@@ -272,7 +271,9 @@ function enableDraggable(imgElement, type) {
     clone.style.top = e.clientY + "px";
     clone.style.opacity = "0.9";
     clone.style.pointerEvents = "none";
-    clone.style.width = "14vw"; 
+    clone.style.touchAction = "none"; // ✅ 新增：手機拖曳滑順
+    clone.style.transform = "translate(-50%, -50%)"; // ✅ 新增：讓手指中心對齊 clone 中心
+    clone.style.width = "14vw";
     clone.id = "dragClone";
     document.body.appendChild(clone);
 
