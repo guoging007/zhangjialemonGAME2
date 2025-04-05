@@ -155,7 +155,7 @@
     <div id="timer">02:00</div>
     <div id="day">Day 1</div>
     <!-- 客人圖片 -->
-    <img id="customer" src="" />
+    <img id="customer" src="客人1.png" style="display:none;" />
 
     <!-- 對話框 -->
     <div id="dialogue"></div>
@@ -190,6 +190,7 @@ let specialCustomerFlags = {
 };
 
 let specialToday = []; // 當天出現的特殊客人列表
+let specialTodayUsed = [];
 let day = 1;
 let timeLeft = 120;
 let lemonCount = 0;
@@ -205,6 +206,8 @@ let ghostDone = [false, false, false, false];
 let ghostCGTriggered = false;
 let customer5Fails = [false, false, false, false];
 let customer5StoryDone = false;
+let customer8ClickCount = 0;
+let customer8Converted = false; // 是否已變成客人8開心
 
 const background = document.getElementById("background");
 const timer = document.getElementById("timer");
@@ -246,12 +249,14 @@ function drawTodaySpecials() {
     specialToday.push(pick);
     specialCustomerFlags[pick] = true;
   }
-
-  console.log("今日特殊客人：", specialToday);
+   specialTodayUsed = []; // ✅ 每天開始時清空已使用
+   console.log("今日特殊客人：", specialToday);
 }
 
 
-function startGame() {
+function startGame() {  
+  if (timerInterval) clearInterval(timerInterval);
+  day = Math.max(1, day);  // ✅ 硬性修正 day 起始為 1
   timeLeft = 120;
   lemonCount = 0;
   customerActive = false;
@@ -261,21 +266,26 @@ function startGame() {
   buddhaBook.style.display = gotBuddhaBook ? "block" : "none";
   customer.style.display = "none";
   dialogue.style.display = "none";
-  drawTodaySpecials();  // ✅ 每回合開始都抽出當天的特殊客人
+  drawTodaySpecials();  
   updateUI();
 
-  spawnCustomer();
-
-  const timerInterval = setInterval(() => {
-  timeLeft--;
-  updateUI();
-  if (timeLeft <= 0) {
-    clearInterval(timerInterval);
-    endGame();
+  if ([3, 7, 10, 15].includes(day)) {
+    if (checkGhostDay()) return;
   }
-}, 1000); // ✅ 這一行是結尾，不能少！
 
-} // ✅ ←←← 最終正確關閉整個 startGame() 函式
+  spawnCustomer();  // ✅ 客人出現
+
+  // ✅ 正確地放在這裡：遊戲正式開始後再啟動計時器！
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateUI();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      endGame();
+    }
+  }, 1000);
+}
+
 
 
 lemon.addEventListener("click", () => {
@@ -350,18 +360,30 @@ function spawnCustomer() {
   if (customerActive) return;
 
   customerActive = true;
+ let customerType = randomCustomerType();
+window.currentCustomerType = customerType;
+customer.dataset.type = customerType;
 
-  // 客人類型
-  let customerType = randomCustomerType();
-  customer.dataset.type = customerType;
+if (customerType === 8 && !customer8Converted) {
+  customer8ClickCount = 0;
 
-  // 圖片設定
-  if (customerType === 8 && customer8Converted) {
-    customer.src = "客人8開心.png";
-  } else {
-    customer.src = `客人${customerType}.png`;
-  }
-
+  customer.onclick = () => {
+    customer8ClickCount++;
+    if (customer8ClickCount === 1) {
+      dialogue.textContent = "你想幹什麼！";
+    } else if (customer8ClickCount === 2) {
+      dialogue.textContent = "叫你們經理出來！";
+    } else if (customer8ClickCount >= 3) {
+      dialogue.textContent = "下次不會再來了！";
+      setTimeout(() => {
+        handleFail(8);  // ✅ 使用統一離場邏輯
+      }, 1000);
+    }
+    dialogue.style.display = "block";
+  };
+} else {
+  customer.onclick = null;
+}
   customer.style.display = "block";
 
   // 任務需求
@@ -425,16 +447,20 @@ function randomRange(min, max) {
 function randomCustomerType() {
   if (day === 1) return 1;
 
-  // 決定是否出現特殊客人
-  if (specialToday.length > 0 && Math.random() < 0.3) {
-    // 抽出其中一位，並移除避免重複
-    const special = specialToday.splice(Math.floor(Math.random() * specialToday.length), 1)[0];
-    return special;
+  const remainingSpecials = specialToday.filter(type => !specialTodayUsed.includes(type));
+
+  if (remainingSpecials.length > 0 && Math.random() < 0.3) {
+    const pickIndex = Math.floor(Math.random() * remainingSpecials.length);
+    const pick = remainingSpecials[pickIndex];
+
+    specialTodayUsed.push(pick); // ✅ 記錄這位已出現
+    return pick;
   }
 
-  // 其餘為普通客人
+  // 回到普通客人
   return Math.random() < 0.5 ? 1 : 2;
 }
+
 
 // 拖曳機制
 let draggedItem = null;
@@ -502,33 +528,32 @@ function completeTask() {
   clearTimeout(customerTimer);
   customerActive = false;
 
-  const type = parseInt(customer.dataset.type);
+  const type = customer.dataset.type;
+  const typeNum = parseInt(type); // ✅ 僅此一次定義
+
+  if (type === 'ghost') {
+    completeGhost(ghostDays.indexOf(day));
+    return;
+  }
+
   dialogue.textContent = "謝謝！";
 
-if (type === 'ghost') {
-  // 👻 女鬼專屬結束邏輯
-  completeGhost(ghostDays.indexOf(day));
-  return; // ✅ 不再執行後面流程
-}
+  if (typeNum === 6) {
+    dialogue.textContent = "這店家得了 MVP！";
+  }
 
-const typeNum = parseInt(type);
-dialogue.textContent = "謝謝！";
+  if (typeNum === 7) {
+    dialogue.textContent = "南無阿彌陀佛~";
+    buddhaBook.style.display = "block";
+    enableDraggable(buddhaBook, "buddha");
+    gotBuddhaBook = true;
+  }
 
-if (typeNum === 6) {
-  dialogue.textContent = "這店家得了 MVP！";
-}
-if (typeNum === 7) {
-  dialogue.textContent = "南無阿彌陀佛~";
-  buddhaBook.style.display = "block";
-  enableDraggable(buddhaBook, "buddha");
-  gotBuddhaBook = true;
-}
-
-if (typeNum === 5 && customer.dataset.fail === "true") {
-  score -= 5;
-} else {
-  score += (typeNum >= 5 && typeNum <= 8) ? 20 : 10;
-}
+  if (typeNum === 5 && customer.dataset.fail === "true") {
+    score -= 5;
+  } else {
+    score += (typeNum >= 5 && typeNum <= 8) ? 20 : 10;
+  }
 
   customer.style.transform = "translateX(100vw)";
   setTimeout(() => {
@@ -538,7 +563,6 @@ if (typeNum === 5 && customer.dataset.fail === "true") {
     spawnNextCustomer();
   }, 1000);
 }
-
 function handleFail(type) {
   customerActive = false;
 
@@ -579,12 +603,21 @@ function checkGhostDay() {
   const ghostIndex = ghostDays.indexOf(day);
   if (ghostIndex === -1 || ghostDone[ghostIndex]) return false;
 
+  // 👉 顯示提示
+  dialogue.textContent = "……今天有點詭異的氣氛……";
+  dialogue.style.display = "block";
+
+  // 👉 顯示黑暗背景（建立氛圍）
+  background.src = "背景晚上1.png";
+
+  // 10 秒後出現女鬼
   setTimeout(() => {
     spawnGhost(ghostIndex);
   }, 10000);
 
   return true;
 }
+
 
 function spawnGhost(index) {
   customer.dataset.type = 'ghost';
@@ -712,13 +745,13 @@ function endGame() {
 
 
 // 啟動流程
-document.addEventListener("DOMContentLoaded", () => {
+window.onload = () => {
   updateUI();
-  startGame();
   enableDraggable(lemonDrink, "lemon");
   enableDraggable(sugar, "sugar");
   enableDraggable(buddhaBook, "buddha");
-});
+  startGame();
+};
 </script>
 </body>
 </html>
