@@ -77,11 +77,11 @@
     }
     #customer {
       position: absolute;
-      left: 50%;
-      bottom: 10vh;
-      transform: translateX(-50%);
+      left: 4vw;
+      bottom: 6vh;
       width: 30vw;
       z-index: 15;
+      transform: none;
     }
     #dialogue {
       position: absolute;
@@ -308,12 +308,6 @@ function enableDraggable(imgElement, type) {
   if (clone && clone.parentNode) 
     clone.remove();
 }
-
-
-  // ✅ 一定要保證這行執行
-  if (clone && document.body.contains(clone)) {
-    document.body.removeChild(clone);
-  }
   setTimeout(() => {
   const leftovers = document.getElementById("dragClone");
   if (leftovers) document.body.removeChild(leftovers);
