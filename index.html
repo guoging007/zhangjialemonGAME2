@@ -673,13 +673,26 @@ function triggerCustomer5CG() {
 function endGame() {
   customer.style.display = "none";
   dialogue.style.display = "none";
-  background.src = "背景晚上1.png";
 
+  const ghostIndex = ghostDays.indexOf(day);
+
+  if (ghostIndex !== -1 && !ghostDone[ghostIndex]) {
+    // 👻 ✅ 是女鬼日 → 進入女鬼劇情
+    background.src = "背景晚上1.png";
+    setTimeout(() => {
+      spawnGhost(ghostIndex); // ✅ 觸發女鬼互動
+    }, 7000);
+    return; // ⛔ 不要直接進入分數結算
+  }
+
+  // ✅ 不是女鬼日才進行分數結算
+  background.src = "背景晚上1.png";
   setTimeout(() => {
     scoreBoard.style.display = "block";
     scoreText.textContent = `得分：${score}`;
   }, 1000);
 }
+
 
 // 啟動流程
 document.addEventListener("DOMContentLoaded", () => {
