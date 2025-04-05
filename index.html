@@ -392,30 +392,32 @@ function generateLemonNeed(type) {
 }
 
 function generateSugarNeed(type) {
-  if (type === 3) return 30;
+  if (type === 3) return 20;
   if (type === 5 || (type === 8 && !customer8Converted)) return 0;
   return randomRange(0, 3);
 }
 
+
 function getCustomerDialogue(type, lemon, sugar) {
   if (type === 8 && !customer8Converted) return "這什麼破店啊，氣死我了！";
   if (type === 5 && lemon > 0) return `我要 ${lemon} 杯檸檬茶`;
+  if (lemon <= 0 && sugar <= 0) return "謝謝你，剛剛好！";
 
-  let text = "我要 ";
-  if (sugar > 0) text += `${sugar} 份白糖 `;
-  if (lemon > 0) text += `${lemon} 杯檸檬茶`;
-  return text.trim();
+  let lines = [];
+  if (lemon > 0) lines.push(`我要 ${lemon} 杯檸檬飲料`);
+  if (sugar > 0) lines.push(`${sugar} 顆白糖`);
+  return "請給我 " + lines.join(" 和 ");
 }
+
 
 function getCustomerWaitTime(type) {
   if (day === 1) return 30;
   if (type === 2) return randomRange(12, 17);
-  if (type === 3) return 30; // ✅ 客人3固定等待30秒
+  if (type === 3) return 60;
   if (type === 8) return 15;
   if (type >= 4 && type <= 8) return randomRange(10, 15);
-  return randomRange(12, 17); // 客人1與預設邏輯
+  return randomRange(12, 17);
 }
-
 
 function randomRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -425,7 +427,7 @@ function randomCustomerType() {
   if (day < 2) return 1;
 
   // 保證每回合最多只出現 1～2 位特殊客人（3/6/7/8）
-  let baseTypes = [1, 2];
+  let baseTypes = [1, 2].concat(specialToday);
 
   // 加入這回合允許出現的額外客人
   baseTypes = baseTypes.concat(extraCustomersThisRound);
@@ -460,10 +462,12 @@ function handleDrop() {
     lemonCount--;
     lemonNeed--;
     customer.dataset.lemon = lemonNeed;
+    dialogue.textContent = getCustomerDialogue(parseInt(type), lemonNeed, sugarNeed);
   }
   else if (itemId === "sugar" && sugarNeed > 0) {
     sugarNeed--;
     customer.dataset.sugar = sugarNeed;
+    dialogue.textContent = getCustomerDialogue(parseInt(type), lemonNeed, sugarNeed);
   }
   else if (itemId === "buddhaBook" && type === "8" && !customer8Converted) {
     customer.src = "客人8開心.png";
