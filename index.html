@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=portrait" />
   <title>張家檸檬店</title>
   <style>
     * {
@@ -13,6 +13,8 @@
       -webkit-user-drag: none;
     }
     html, body {
+      margin: 0;
+      padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
@@ -64,10 +66,11 @@
     #sugar { top: 40%; left: 4vw; }
     #buddhaBook {
       position: absolute;
-      right: 2vw;
-      bottom: 5vw;
-      width: 14vw; /* ✅ 放大一點 */
-      z-index: 100;
+      right: 4vw;
+      bottom: 18vh;  /* ✅ 原本可能是 5vh，太低了 */
+      width: 16vw;
+      display: none;
+      z-index: 10;
     }
     #lemon {
       left: 45vw;
@@ -78,7 +81,7 @@
     #customer {
       position: absolute;
       left: 4vw;
-      bottom: 6vh;
+      bottom: 12vh;
       width: 30vw;
       z-index: 15;
       transform: none;
@@ -164,6 +167,16 @@
     </div>
   </div>
 <script>
+let specialCustomerFlags = {
+  3: false,
+  4: false,
+  5: false,
+  6: false,
+  7: false,
+  8: false
+};
+
+let specialToday = []; // 當天出現的特殊客人列表
 let day = 1;
 let timeLeft = 120;
 let lemonCount = 0;
@@ -212,6 +225,21 @@ function nextDay() {
 
 let extraCustomersThisRound = [];
 
+function drawTodaySpecials() {
+  const pool = Object.keys(specialCustomerFlags).filter(k => !specialCustomerFlags[k]);
+  specialToday = [];
+  const count = Math.floor(Math.random() * 2) + 1; // 每天 1～2 位
+
+  while (specialToday.length < count && pool.length > 0) {
+    const pick = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+    specialToday.push(Number(pick));
+    specialCustomerFlags[pick] = true; // 標記這位客人已出現過
+  }
+
+  console.log("今日特殊客人：", specialToday);
+}
+
+
 function startGame() {
   timeLeft = 120;
   lemonCount = 0;
@@ -222,6 +250,8 @@ function startGame() {
   buddhaBook.style.display = gotBuddhaBook ? "block" : "none";
   customer.style.display = "none";
   dialogue.style.display = "none";
+  drawTodaySpecials();  // ✅ 每回合開始都抽出當天的特殊客人
+  updateUI();
 
   // 每場遊戲先抽出特殊客人
   const candidates = [3, 6, 7, 8];
