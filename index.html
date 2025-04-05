@@ -239,13 +239,11 @@ function nextDay() {
 let extraCustomersThisRound = [];
 
 function drawTodaySpecials() {
-  const pool = Object.keys(specialCustomerFlags).filter(k => !specialCustomerFlags[k]);
-  specialToday = [];
-  const count = Math.floor(Math.random() * 2) + 1; // 每天 1～2 位
-
-  while (specialToday.length < count && pool.length > 0) {
-    const pick = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-    specialToday.push(Number(pick));
+  const available = [3, 4, 5, 6, 7, 8].filter(x => !specialCustomerFlags[x]);
+  const count = Math.min(2, available.length); // 最多兩個
+  while (specialToday.length < count) {
+    const pick = available.splice(Math.floor(Math.random() * available.length), 1)[0];
+    specialToday.push(pick);
     specialCustomerFlags[pick] = true;
   }
 
@@ -425,10 +423,19 @@ function randomRange(min, max) {
 }
 
 function randomCustomerType() {
-  if (day < 2) return 1;
-  let baseTypes = [1, 2].concat(specialToday);
-  return baseTypes[Math.floor(Math.random() * baseTypes.length)];
+  if (day === 1) return 1;
+
+  // 決定是否出現特殊客人
+  if (specialToday.length > 0 && Math.random() < 0.3) {
+    // 抽出其中一位，並移除避免重複
+    const special = specialToday.splice(Math.floor(Math.random() * specialToday.length), 1)[0];
+    return special;
+  }
+
+  // 其餘為普通客人
+  return Math.random() < 0.5 ? 1 : 2;
 }
+
 // 拖曳機制
 let draggedItem = null;
 
@@ -498,21 +505,30 @@ function completeTask() {
   const type = parseInt(customer.dataset.type);
   dialogue.textContent = "謝謝！";
 
-  if (type === 6) {
-    dialogue.textContent = "這店家得了 MVP！";
-  }
- if (type === 7) {
+if (type === 'ghost') {
+  // 👻 女鬼專屬結束邏輯
+  completeGhost(ghostDays.indexOf(day));
+  return; // ✅ 不再執行後面流程
+}
+
+const typeNum = parseInt(type);
+dialogue.textContent = "謝謝！";
+
+if (typeNum === 6) {
+  dialogue.textContent = "這店家得了 MVP！";
+}
+if (typeNum === 7) {
   dialogue.textContent = "南無阿彌陀佛~";
   buddhaBook.style.display = "block";
   enableDraggable(buddhaBook, "buddha");
   gotBuddhaBook = true;
 }
 
-  if (type === 5 && customer.dataset.fail === "true") {
-    score -= 5;
-  } else {
-    score += (type >= 5 && type <= 8) ? 20 : 10;
-  }
+if (typeNum === 5 && customer.dataset.fail === "true") {
+  score -= 5;
+} else {
+  score += (typeNum >= 5 && typeNum <= 8) ? 20 : 10;
+}
 
   customer.style.transform = "translateX(100vw)";
   setTimeout(() => {
@@ -583,8 +599,9 @@ function spawnGhost(index) {
 
   customerTimer = setTimeout(() => {
     handleFail('ghost');
-  }, randomRange(12, 17) * 1000);
+  }, 60000); // ✅ 女鬼任務等待 60 秒
 }
+
 
 function completeGhost(index) {
   customer.src = "女鬼2.png";
