@@ -63,11 +63,11 @@
     }
     #sugar { top: 40%; left: 4vw; }
     #buddhaBook {
-      bottom: 3vh;
+      position: absolute;
       right: 2vw;
-      width: 8vw;
-      display: none;
-      z-index: 10;
+      bottom: 5vw;
+      width: 14vw; /* ✅ 放大一點 */
+      z-index: 100;
     }
     #lemon {
       left: 45vw;
@@ -228,8 +228,23 @@ function startGame() {
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       endGame();
+
+  let extraCustomersThisRound = [];
+
+  function startGame() {
+  ...
+  // 隨機從 3～8 中挑 1～2 位特殊客人
+  const candidates = [3, 6, 7, 8];
+  extraCustomersThisRound = [];
+
+  const count = randomRange(1, 2); // 出現1或2個
+  while (extraCustomersThisRound.length < count) {
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    if (!extraCustomersThisRound.includes(pick)) {
+      extraCustomersThisRound.push(pick);
     }
   }, 1000);
+
 }
 
 let lemonClickCount = 0;
@@ -256,6 +271,7 @@ function enableDraggable(imgElement, type) {
     clone.style.top = e.clientY + "px";
     clone.style.opacity = "0.9";
     clone.style.pointerEvents = "none";
+    clone.style.width = "14vw"; 
     clone.id = "dragClone";
     document.body.appendChild(clone);
 
@@ -264,28 +280,32 @@ function enableDraggable(imgElement, type) {
       clone.style.top = e.clientY + "px";
     };
 
-   const up = (e) => {
+ const up = (e) => {
   document.removeEventListener("pointermove", move);
   document.removeEventListener("pointerup", up);
 
   const customerRect = customer.getBoundingClientRect();
   const cloneRect = clone.getBoundingClientRect();
 
-  const hit =
-    cloneRect.left < customerRect.right &&
-    cloneRect.right > customerRect.left &&
-    cloneRect.top < customerRect.bottom &&
-    cloneRect.bottom > customerRect.top;
+  const cloneCenterX = cloneRect.left + cloneRect.width / 2;
+  const cloneCenterY = cloneRect.top + cloneRect.height / 2;
+  const customerCenterX = customerRect.left + customerRect.width / 2;
+  const customerCenterY = customerRect.top + customerRect.height / 2;
 
-  // 🔄 不論有沒有命中客人，都要刪掉 clone
+  const distance = Math.sqrt(
+    Math.pow(cloneCenterX - customerCenterX, 2) +
+    Math.pow(cloneCenterY - customerCenterY, 2)
+  );
+
+  const hit = distance < 100;
+
   if (hit) {
-  handleDrop();  // 使用已存在的處理函數
-}
+    handleDrop(); // 或 handleDropItem(type)
+  }
 
-// ✅ 無論是否命中客人，都要刪除 clone
-setTimeout(() => {
   if (clone && clone.parentNode) clone.remove();
-}, 10);
+};
+
 
 
   // ✅ 一定要保證這行執行
@@ -366,10 +386,12 @@ function getCustomerDialogue(type, lemon, sugar) {
 function getCustomerWaitTime(type) {
   if (day === 1) return 30;
   if (type === 2) return randomRange(12, 17);
-  if (type === 3) return randomRange(10, 12);
+  if (type === 3) return 30; // ✅ 客人3固定等待30秒
   if (type === 8) return 15;
-  return randomRange(12, 17);
+  if (type >= 4 && type <= 8) return randomRange(10, 15);
+  return randomRange(12, 17); // 客人1與預設邏輯
 }
+
 
 function randomRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -377,8 +399,14 @@ function randomRange(min, max) {
 
 function randomCustomerType() {
   if (day < 2) return 1;
-  const types = [1, 2, 3, 5, 6, 7, 8]; // 去除 4（保留擴展空間）
-  return types[Math.floor(Math.random() * types.length)];
+
+  // 保證每回合最多只出現 1～2 位特殊客人（3/6/7/8）
+  let baseTypes = [1, 2];
+
+  // 加入這回合允許出現的額外客人
+  baseTypes = baseTypes.concat(extraCustomersThisRound);
+
+  return baseTypes[Math.floor(Math.random() * baseTypes.length)];
 }
 // 拖曳機制
 let draggedItem = null;
@@ -452,7 +480,8 @@ function completeTask() {
   }
   if (type === 7) {
     dialogue.textContent = "南無阿彌陀佛~";
-    buddhaBook.style.display = "block";
+   buddhaBook.style.display = "block";
+   enableDraggable(buddhaBook, "buddha"); // 再綁一次保險
   }
 
   if (type === 5 && customer.dataset.fail === "true") {
