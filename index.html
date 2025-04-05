@@ -18,6 +18,7 @@
       overflow: hidden;
       font-family: "微軟正黑體", sans-serif;
       background-color: black;
+      touch-action: manipulation; /* ✅ 禁止雙點縮放 */
     }
     .game-container {
       position: relative;
@@ -45,7 +46,7 @@
     #day { right: 2vw; }
     .item {
       position: absolute;
-      width: 9vw;
+      width: 16vw;
       cursor: pointer;
       z-index: 10;
     }
@@ -54,7 +55,7 @@
       position: absolute;
       right: 8vw;
       top: 36%;
-      font-size: 4vw;
+      font-size: 5vw;
       font-weight: bold;
       color: white;
       text-shadow: 2px 2px black;
@@ -278,8 +279,14 @@ function enableDraggable(imgElement, type) {
 
   // 🔄 不論有沒有命中客人，都要刪掉 clone
   if (hit) {
-    handleDropItem(type);  // 成功觸發交付
-  }
+  handleDrop();  // 使用已存在的處理函數
+}
+
+// ✅ 無論是否命中客人，都要刪除 clone
+setTimeout(() => {
+  if (clone && clone.parentNode) clone.remove();
+}, 10);
+
 
   // ✅ 一定要保證這行執行
   if (clone && document.body.contains(clone)) {
