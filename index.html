@@ -52,7 +52,6 @@
       cursor: pointer;
       z-index: 10;
     }
-    #lemonDrink { top: 40%; right: 8vw; }
     #lemonDrinkCount {
       position: absolute;
       right: 8vw;
@@ -63,7 +62,6 @@
       text-shadow: 2px 2px black;
       z-index: 11;
     }
-    #sugar { top: 40%; left: 4vw; }
     #buddhaBook {
       position: absolute;
       right: 4vw;
@@ -73,11 +71,25 @@
       z-index: 10;
     }
     #lemon {
-      left: 45vw;
-      top: 20%;
-      width: 16vw;
-      z-index: 10;
-    }
+  left: 45vw;
+  top: 20%;
+  width: 24vw; /* ✅ 原本是 16vw，這邊放大 */
+  z-index: 10;
+}
+
+#sugar {
+  top: 40%;
+  left: 4vw;
+  width: 22vw; /* ✅ 原本是 16vw，放大 */
+  z-index: 10;
+}
+
+#lemonDrink {
+  top: 40%;
+  right: 8vw;
+  width: 22vw; /* ✅ 原本是 16vw，放大 */
+  z-index: 10;
+}
     #customer {
       position: absolute;
       left: 4vw;
@@ -112,16 +124,17 @@
       z-index: 100;
       color: white;
       text-align: center;
-      font-size: 2vw;
+      font-size: 5vw;
       display: none;
     }
     #scoreText {
-      margin-top: 30vh;
+      margin-top: 25vh;
+      font-size: 8vw; 
     }
     button {
-      margin-top: 2vh;
-      padding: 1vh 3vw;
-      font-size: 1.5vw;
+      margin-top: 4vh;
+      padding: 2vh 5vw;
+      font-size: 5vw;
     }
     .shake {
       animation: shake 0.3s infinite;
@@ -233,7 +246,7 @@ function drawTodaySpecials() {
   while (specialToday.length < count && pool.length > 0) {
     const pick = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
     specialToday.push(Number(pick));
-    specialCustomerFlags[pick] = true; // 標記這位客人已出現過
+    specialCustomerFlags[pick] = true;
   }
 
   console.log("今日特殊客人：", specialToday);
@@ -252,18 +265,6 @@ function startGame() {
   dialogue.style.display = "none";
   drawTodaySpecials();  // ✅ 每回合開始都抽出當天的特殊客人
   updateUI();
-
-  // 每場遊戲先抽出特殊客人
-  const candidates = [3, 6, 7, 8];
-  extraCustomersThisRound = [];
-
-  const count = randomRange(1, 2);
-  while (extraCustomersThisRound.length < count) {
-    const pick = candidates[Math.floor(Math.random() * candidates.length)];
-    if (!extraCustomersThisRound.includes(pick)) {
-      extraCustomersThisRound.push(pick);
-    }
-  }
 
   spawnCustomer();
 
@@ -425,13 +426,7 @@ function randomRange(min, max) {
 
 function randomCustomerType() {
   if (day < 2) return 1;
-
-  // 保證每回合最多只出現 1～2 位特殊客人（3/6/7/8）
   let baseTypes = [1, 2].concat(specialToday);
-
-  // 加入這回合允許出現的額外客人
-  baseTypes = baseTypes.concat(extraCustomersThisRound);
-
   return baseTypes[Math.floor(Math.random() * baseTypes.length)];
 }
 // 拖曳機制
